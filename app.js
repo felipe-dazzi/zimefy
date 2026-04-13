@@ -147,8 +147,8 @@ async function syncDashboard() {
         // 1. Fetch Today's Sales
         const { data: sales, error: salesErr } = await _supabase
             .from('zimefy_vendas')
-            .select('valor_liquido, valor_bruto, created_at')
-            .gte('created_at', today);
+            .select('valor_liquido, valor_bruto, data_venda')
+            .gte('data_venda', today);
 
         // 2. Fetch Today's Spend
         const { data: spend, error: spendErr } = await _supabase
@@ -156,21 +156,32 @@ async function syncDashboard() {
             .select('valor_gasto, cliques, impressoes')
             .eq('data_referencia', today);
 
-        if (salesErr || spendErr) throw new Error("Erro ao buscar dados");
+        if (salesErr) throw salesErr;
+        if (spendErr) throw spendErr;
 
         // 3. Process Metrics
-        const totalSales = sales.reduce((acc, s) => acc + (s.valor_liquido || 0), 0);
-        const totalSpend = spend.reduce((acc, s) => acc + (s.valor_gasto || 0), 0);
-        const profit = totalSales - totalSpend;
-        const roi = totalSpend > 0 ? (profit / totalSpend) * 100 : 0;
+        const totalSalesLiquida = sales.reduce((acc, s) => acc + (parseFloat(s.valor_liquido) || 0), 0);
+        const totalSalesBruta = sales.reduce((acc, s) => acc + (parseFloat(s.valor_bruto) || 0), 0);
+        const totalSpend = spend.reduce((acc, s) => acc + (parseFloat(s.valor_gasto) || 0), 0);
+        
+        const profit = totalSalesLiquida - totalSpend;
+        const roi = totalSpend > 0 ? (totalSalesLiquida / totalSpend).toFixed(2) : 0;
 
         // 4. Update Stats in DOM
-        updateMetric('stat-receita', totalSales);
+        updateMetric('stat-receita-bruta', totalSalesBruta);
         updateMetric('stat-gasto', totalSpend);
         updateMetric('stat-lucro', profit);
-        updateMetric('stat-roi', roi, true);
+        
+        const roiEl = document.getElementById('stat-roi');
+        if (roiEl) roiEl.innerText = roi + 'x';
 
-        // 5. Update Chart (Simplified for now: uses dummy hours until grouping logic expanded)
+        // Update Sync Timestamp
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        const syncEl = document.querySelector('.date-status');
+        if (syncEl) syncEl.innerHTML = `<span class="status-dot"></span> Sincronizado: Hoje, ${timeStr}`;
+
+        // 5. Update Chart (Simplified)
         initChart([], [], []); 
 
     } catch (err) {
