@@ -1,0 +1,102 @@
+{
+  "name": "ZimeFY - Sync Kiwify Revenue",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "zimefy-kiwify-sync",
+        "options": {}
+      },
+      "name": "Webhook Kiwify",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.status }}",
+              "value2": "paid"
+            }
+          ]
+        }
+      },
+      "name": "Apenas Pagos",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "// Cálculo de Lucro Líquido ZimeFY\n// Estimativa: 8.99% taxa Kiwify + 2% margem segurança\nconst gross = $json.order_amount / 100;\nconst net = gross * 0.88;\n\nreturn {\n  cliente_email: $json.email,\n  produto: $json.product_name,\n  valor_bruto: gross,\n  valor_liquido: net,\n  utm_campaign: $json.utm_campaign || $json.src || 'Direto',\n  utm_content: $json.utm_content || 'N/A',\n  status: 'aprovado'\n};"
+      },
+      "name": "Calcular ROI",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        680,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "table": {
+          "__fixed": "zimefy_vendas"
+        },
+        "data": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Supabase ZimeFY",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        900,
+        280
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook Kiwify": {
+      "main": [
+        [
+          {
+            "node": "Apenas Pagos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apenas Pagos": {
+      "main": [
+        [
+          {
+            "node": "Calcular ROI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular ROI": {
+      "main": [
+        [
+          {
+            "node": "Supabase ZimeFY",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

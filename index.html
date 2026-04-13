@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZimeFY | Central de Inteligência</title>
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Charts & DB -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <aside>
+        <div class="logo">
+            <span>⚡</span> ZimeFY
+        </div>
+        <nav id="sidebar-nav">
+            <a href="#" class="nav-link active" data-tab="dashboard"><span>🏠</span> Dashboard</a>
+            <a href="#" class="nav-link" data-tab="vendas"><span>📊</span> Vendas</a>
+            <a href="#" class="nav-link" data-tab="anuncios"><span>📢</span> Anúncios</a>
+            <a href="#" class="nav-link" data-tab="config"><span>⚙️</span> Ajustes</a>
+        </nav>
+        <div style="margin-top:auto; color: var(--text-dim); font-size: 11px; text-align: center;">
+            v1.0.0 Alpha
+        </div>
+    </aside>
+
+    <main>
+        <!-- DASHBOARD TAB -->
+        <div id="dashboard" class="tab-content active">
+            <header>
+                <div>
+                    <h1>Gestão de ROI</h1>
+                    <p style="color: var(--text-dim); margin-top: 5px;">Acompanhando o faturamento líquido da Zime Digital.</p>
+                </div>
+                <div class="date-status">
+                    <span class="status-dot"></span>
+                    Sincronizado: Hoje, 21:42
+                </div>
+            </header>
+
+
+        <section class="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-label">Receita Bruta <span>💳</span></div>
+                <div class="metric-value">R$ 2.450,00</div>
+                <div class="metric-sub trend-up">↑ 18% em 24h</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Gasto Ads (Live) <span>📉</span></div>
+                <div class="metric-value">R$ 512,40</div>
+                <div class="metric-sub" style="color: var(--text-dim);">82% do budget diário</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">Lucro Real <span>🏆</span></div>
+                <div class="metric-value profit">R$ 1.937,60</div>
+                <div class="metric-sub trend-up">Margem: 79%</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-label">ROAS <span>📈</span></div>
+                <div class="metric-value gold">4.78x</div>
+                <div class="metric-sub trend-up">Meta: 3.5x</div>
+            </div>
+        </section>
+
+        <div class="content-row">
+            <div class="glass-panel">
+                <h3 style="margin-bottom: 25px;">Progressão Diária</h3>
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+            </div>
+            <div class="glass-panel" style="display: flex; flex-direction: column; justify-content: center; text-align: center;">
+                <div style="font-size: 50px; margin-bottom: 15px;">🎯</div>
+                <h3>Destaque do Dia</h3>
+                <p style="color: var(--text-dim); margin: 15px 0; font-size: 15px;">A campanha do <strong>O Destravar</strong> gerou o melhor ROI das últimas 12 horas.</p>
+                <div style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 15px; border: 1px dashed var(--accent-green);">
+                    <span style="display:block; font-size: 12px; color: var(--accent-green); font-weight: 700;">MELHOR AD</span>
+                    <span style="font-size: 18px; font-weight: 800;">VSL_01_REMARKETING</span>
+                </div>
+            </div>
+        </div>
+
+        <section class="glass-panel">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3>Atividade Recente</h3>
+                <button style="background: none; border: 1px solid var(--card-border); color: var(--text-dim); padding: 8px 15px; border-radius: 8px; font-size: 12px; cursor: pointer;">Ver todos</button>
+            </div>
+            <div class="data-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data/Hora</th>
+                            <th>Evento</th>
+                            <th>Origem</th>
+                            <th>Valor</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="events-body">
+                        <!-- Simulated Data -->
+                        <tr>
+                            <td>21:30</td>
+                            <td>Venda: O Destravar</td>
+                            <td>Facebook Ads</td>
+                            <td>R$ 47,00</td>
+                            <td><span class="pill pill-paid">COMPLETO</span></td>
+                        </tr>
+                        <tr>
+                            <td>21:10</td>
+                            <td>Sincronização de Gastos</td>
+                            <td>Meta API</td>
+                            <td>- R$ 12,50</td>
+                            <td><span class="pill pill-ads">ADS LOG</span></td>
+                        </tr>
+                        <tr>
+                            <td>20:45</td>
+                            <td>Venda: Alquimia Digital</td>
+                            <td>Checkout Direto</td>
+                            <td>R$ 97,00</td>
+                            <td><span class="pill pill-paid">COMPLETO</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+        </div>
+
+        <!-- VENDAS TAB -->
+        <div id="vendas" class="tab-content">
+            <header>
+                <h1>Extrato de Vendas</h1>
+                <p style="color: var(--text-dim);">Lista completa de transações aprovadas e o ROI por canal.</p>
+            </header>
+            <section class="glass-panel" style="min-height: 400px; display: flex; align-items: center; justify-content: center; text-align: center;">
+                <div>
+                    <div style="font-size: 40px; margin-bottom: 20px;">📂</div>
+                    <p style="color: var(--text-dim);">O banco de dados de vendas será exibido aqui.<br>Aguardando integração com Supabase.</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- ANUNCIOS TAB -->
+        <div id="anuncios" class="tab-content">
+            <header>
+                <h1>Gestão de Anúncios</h1>
+                <p style="color: var(--text-dim);">Ativação, pausa e ajuste de orçamento em tempo real.</p>
+            </header>
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">CPM Médio</div>
+                    <div class="metric-value">R$ 12,40</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">CTR</div>
+                    <div class="metric-value gold">2.4%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Checkouts</div>
+                    <div class="metric-value">142</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">Custo p/ Checkout</div>
+                    <div class="metric-value">R$ 3,60</div>
+                </div>
+            </div>
+            <section class="glass-panel">
+                <p style="color: var(--text-dim); text-align: center; padding: 40px;">O Gerenciador de Campanhas será desbloqueado na Fase 3.</p>
+            </section>
+        </div>
+
+        <!-- CONFIG TAB -->
+        <div id="config" class="tab-content">
+            <header>
+                <h1>Ajustes do Sistema</h1>
+                <p style="color: var(--text-dim);">Tokens de API, Webhooks e Margens Financeiras.</p>
+            </header>
+            <section class="glass-panel">
+                <div style="max-width: 500px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display:block; margin-bottom: 8px; font-size: 13px;">Meta Ads Access Token</label>
+                        <input type="password" value="************************" disabled style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; color: #fff;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom: 8px; font-size: 13px;">Margem de Imposto (%)</label>
+                        <input type="text" value="6%" disabled style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; color: #fff;">
+                    </div>
+                </div>
+            </section>
+        </div>
+
+    </main>
+
+    <script src="app.js"></script>
+</body>
+</html>
+

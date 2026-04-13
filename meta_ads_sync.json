@@ -1,0 +1,122 @@
+{
+  "name": "ZimeFY - Sync Meta Ads Spend",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "interval": 3
+            }
+          ]
+        }
+      },
+      "name": "Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.facebook.com/v19.0/{{ $vars.META_AD_ACCOUNT_ID }}/insights",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "date_preset",
+                "value": "today"
+              },
+              {
+                "name": "fields",
+                "value": "spend,clicks,impressions,account_id"
+              },
+              {
+                "name": "access_token",
+                "value": "={{ $vars.META_ACCESS_TOKEN }}"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Facebook Insights API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4,
+      "position": [
+        320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "language": "javascript",
+        "jsCode": "// Tratamento de Dados Meta Ads\nconst data = $node[\"Facebook Insights API\"].json.data[0] || {\n  spend: 0,\n  clicks: 0,\n  impressions: 0,\n  account_id: \"N/A\"\n};\n\nreturn {\n  valor_gasto: parseFloat(data.spend),\n  cliques: parseInt(data.clicks),\n  impressoes: parseInt(data.impressions),\n  account_id: data.account_id,\n  data_referencia: new Date().toISOString().split('T')[0]\n};"
+      },
+      "name": "Format Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        540,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "table": {
+          "__fixed": "zimefy_gastos_ads"
+        },
+        "columnToMatchOn": "data_referencia",
+        "data": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Supabase Upsert",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        760,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Facebook Insights API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Facebook Insights API": {
+      "main": [
+        [
+          {
+            "node": "Format Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Data": {
+      "main": [
+        [
+          {
+            "node": "Supabase Upsert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}
