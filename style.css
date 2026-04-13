@@ -291,12 +291,15 @@ h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; }
     border: 1px solid var(--card-border);
     padding: 25px;
     border-radius: 16px;
-    transition: 0.2s;
+    transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+    cursor: default;
 }
 
 .metric-card:hover { 
     border-color: var(--accent-primary);
     background: #161616;
+    transform: translateY(-8px) scale(1.01);
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(123, 44, 191, 0.1);
 }
 
 .metric-label {
@@ -330,6 +333,12 @@ h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.01em; }
     border: 1px solid var(--card-border);
     padding: 30px;
     border-radius: 16px;
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.glass-panel:hover {
+    border-color: rgba(123, 44, 191, 0.3);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
 }
 
 .chart-container { height: 350px; position: relative; }
