@@ -139,10 +139,23 @@
                 <h1>Extrato de Vendas</h1>
                 <p style="color: var(--text-dim);">Lista completa de transações aprovadas e o ROI por canal.</p>
             </header>
-            <section class="glass-panel" style="min-height: 400px; display: flex; align-items: center; justify-content: center; text-align: center;">
-                <div>
-                    <div style="font-size: 40px; margin-bottom: 20px;">📂</div>
-                    <p style="color: var(--text-dim);">O banco de dados de vendas será exibido aqui.<br>Aguardando integração com Supabase.</p>
+            <section class="glass-panel">
+                <div class="data-table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Data/Hora</th>
+                                <th>Produto</th>
+                                <th>Origem/UTM</th>
+                                <th>Valor Bruto</th>
+                                <th>Líquido</th>
+                                <th>Satus</th>
+                            </tr>
+                        </thead>
+                        <tbody id="vendas-tab-body">
+                            <!-- Populated by app.js -->
+                        </tbody>
+                    </table>
                 </div>
             </section>
         </div>
@@ -156,19 +169,19 @@
             <div class="metrics-grid">
                 <div class="metric-card">
                     <div class="metric-label">CPM Médio</div>
-                    <div class="metric-value">R$ 12,40</div>
+                    <div class="metric-value" id="ads-cpm">R$ 0,00</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">CTR</div>
-                    <div class="metric-value gold">2.4%</div>
+                    <div class="metric-label">CTR Global</div>
+                    <div class="metric-value gold" id="ads-ctr">0.0%</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Checkouts</div>
-                    <div class="metric-value">142</div>
+                    <div class="metric-label">Investimento Total</div>
+                    <div class="metric-value" id="ads-spend">R$ 0,00</div>
                 </div>
                 <div class="metric-card">
-                    <div class="metric-label">Custo p/ Checkout</div>
-                    <div class="metric-value">R$ 3,60</div>
+                    <div class="metric-label">Custo p/ Aquisição (CPA)</div>
+                    <div class="metric-value" id="ads-cpa">R$ 0,00</div>
                 </div>
             </div>
             <section class="glass-panel">
