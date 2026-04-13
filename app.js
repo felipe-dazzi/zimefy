@@ -149,7 +149,7 @@ async function syncDashboard() {
             .from('zimefy_vendas')
             .select('*')
             .gte('data_venda', today)
-            .order('data_venda', { ascending: false });
+            .order('data_venda', { ascending: true });
 
         // 2. Fetch Today's Spend
         const { data: spend, error: spendErr } = await _supabase
@@ -189,8 +189,8 @@ async function syncDashboard() {
         if (ctrEl) ctrEl.innerText = ctr + '%';
 
         // 6. Update Tables
-        renderSalesTable(sales, 'vendas-tab-body');
-        renderSalesTable(sales.slice(0, 5), 'events-body'); // Dashboard recent feed
+        renderSalesTable([...sales].reverse(), 'vendas-tab-body');
+        renderSalesTable([...sales].reverse().slice(0, 5), 'events-body');
 
         // Update Sync Timestamp
         const now = new Date();
@@ -198,8 +198,29 @@ async function syncDashboard() {
         const syncEl = document.querySelector('.date-status');
         if (syncEl) syncEl.innerHTML = `<span class="status-dot"></span> Sincronizado: Hoje, ${timeStr}`;
 
-        // 7. Update Chart
-        initChart([], [], []); 
+        // 7. Process Hourly Data for Chart
+        const hourlySales = Array(24).fill(0);
+        const hourlySpend = Array(24).fill(0);
+        const labels = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
+
+        sales.forEach(s => {
+            const hour = new Date(s.data_venda).getHours();
+            hourlySales[hour] += parseFloat(s.valor_liquido) || 0;
+        });
+
+        // Simplified Spend: Distributed evenly for demo if only 1 entry, 
+        // but in production it's better to fetch timestamped logs.
+        if (spend.length === 1) {
+            const currentHour = now.getHours();
+            for(let i=0; i <= currentHour; i++) hourlySpend[i] = totalSpend / (currentHour + 1);
+        } else {
+            spend.forEach(s => {
+                const hour = new Date(s.last_sync || s.data_referencia).getHours();
+                hourlySpend[hour] += parseFloat(s.valor_gasto) || 0;
+            });
+        }
+
+        initChart(hourlySales, hourlySpend, labels); 
 
     } catch (err) {
         console.error("Sync Error:", err);
