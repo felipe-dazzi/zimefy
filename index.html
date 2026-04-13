@@ -14,7 +14,30 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Login Screen -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="login-logo"><span>⚡</span> ZimeFY</div>
+                <p>Central de Inteligência Digital</p>
+            </div>
+            <div class="login-form">
+                <div class="input-group">
+                    <label>Usuário</label>
+                    <input type="text" id="username" placeholder="felipedazzi" autocomplete="username">
+                </div>
+                <div class="input-group">
+                    <label>Senha</label>
+                    <input type="password" id="password" placeholder="••••••••" autocomplete="current-password">
+                </div>
+                <button onclick="handleLogin()" class="login-btn">DESBLOQUEAR ACESSO</button>
+                <div id="login-error" class="login-error">Credenciais incorretas</div>
+            </div>
+        </div>
+    </div>
 
+    <!-- Main App Layout (Hidden by default) -->
+    <div id="app-container" class="app-container" style="display: none; opacity: 0;">
     <aside>
         <div class="logo">
             <span>⚡</span> ZimeFY
@@ -48,23 +71,23 @@
         <section class="metrics-grid">
             <div class="metric-card">
                 <div class="metric-label">Receita Bruta <span>💳</span></div>
-                <div class="metric-value">R$ 2.450,00</div>
-                <div class="metric-sub trend-up">↑ 18% em 24h</div>
+                <div class="metric-value" id="stat-receita-bruta">R$ 0,00</div>
+                <div class="metric-sub">Sincronização Ativa</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">Gasto Ads (Live) <span>📉</span></div>
-                <div class="metric-value">R$ 512,40</div>
-                <div class="metric-sub" style="color: var(--text-dim);">82% do budget diário</div>
+                <div class="metric-value" id="stat-gasto">R$ 0,00</div>
+                <div class="metric-sub" style="color: var(--text-dim);">Aguardando campanhas</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">Lucro Real <span>🏆</span></div>
-                <div class="metric-value profit">R$ 1.937,60</div>
-                <div class="metric-sub trend-up">Margem: 79%</div>
+                <div class="metric-value profit" id="stat-lucro">R$ 0,00</div>
+                <div class="metric-sub">Margem: 0%</div>
             </div>
             <div class="metric-card">
                 <div class="metric-label">ROAS <span>📈</span></div>
-                <div class="metric-value gold">4.78x</div>
-                <div class="metric-sub trend-up">Meta: 3.5x</div>
+                <div class="metric-value gold" id="stat-roi">0.00x</div>
+                <div class="metric-sub">Performance Elite</div>
             </div>
         </section>
 
@@ -103,28 +126,7 @@
                         </tr>
                     </thead>
                     <tbody id="events-body">
-                        <!-- Simulated Data -->
-                        <tr>
-                            <td>21:30</td>
-                            <td>Venda: O Destravar</td>
-                            <td>Facebook Ads</td>
-                            <td>R$ 47,00</td>
-                            <td><span class="pill pill-paid">COMPLETO</span></td>
-                        </tr>
-                        <tr>
-                            <td>21:10</td>
-                            <td>Sincronização de Gastos</td>
-                            <td>Meta API</td>
-                            <td>- R$ 12,50</td>
-                            <td><span class="pill pill-ads">ADS LOG</span></td>
-                        </tr>
-                        <tr>
-                            <td>20:45</td>
-                            <td>Venda: Alquimia Digital</td>
-                            <td>Checkout Direto</td>
-                            <td>R$ 97,00</td>
-                            <td><span class="pill pill-paid">COMPLETO</span></td>
-                        </tr>
+                        <!-- Real-time activities will appear here -->
                     </tbody>
                 </table>
             </div>
@@ -196,6 +198,7 @@
 
     </main>
 
+    <div id="login-helper" style="position:fixed; bottom:10px; right:10px; font-size:10px; color:rgba(255,255,255,0.1); pointer-events:none;">v1.0.2 SECURE</div>
     <script src="app.js"></script>
 </body>
 </html>

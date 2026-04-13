@@ -5,13 +5,32 @@ const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let mainChartInstance = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    await syncDashboard();
-    
-    // Auto-refresh every 5 minutes
-    setInterval(syncDashboard, 5 * 60 * 1000);
+    initChart(); // Initialize with zeros
 });
+
+// Authentication Logic
+async function handleLogin() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const errorEl = document.getElementById('login-error');
+
+    if (user === 'felipedazzi' && pass === 'felipeflp') {
+        const overlay = document.getElementById('login-overlay');
+        const app = document.getElementById('app-container');
+        
+        overlay.style.display = 'none';
+        app.style.display = 'flex';
+        setTimeout(() => app.style.opacity = '1', 10);
+
+        // Start Syncing Data
+        await syncDashboard();
+        setInterval(syncDashboard, 5 * 60 * 1000);
+    } else {
+        errorEl.style.display = 'block';
+    }
+}
 
 // Tab Navigation Logic
 function initNavigation() {
@@ -170,5 +189,4 @@ function updateMetric(id, value, isPercentage = false) {
     el.innerText = formattedValue;
 }
 
-// Initial sync
-syncDashboard();
+
