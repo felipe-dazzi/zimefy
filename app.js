@@ -3,6 +3,9 @@ const SUPABASE_URL = "https://dclwipihgyevdmohsnsd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SZ1qn1uzYjfSffyHLnQTig_1JTg8j26";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const FIXED_COSTS_MONTHLY = 333.89;
+const FIXED_COSTS_DAILY = FIXED_COSTS_MONTHLY / 30;
+
 let mainChartInstance = null;
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -68,10 +71,10 @@ function initChart(salesData = [], spendData = [], labels = []) {
     const displaySales = salesData.length ? salesData : [0, 0, 0, 0, 0, 0, 0];
     const displaySpend = spendData.length ? spendData : [0, 0, 0, 0, 0, 0, 0];
 
-    // Gradient for the line chart
+    // Gradient for the line chart (Purple)
     const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-    gradient.addColorStop(0, 'rgba(0, 255, 136, 0.2)');
-    gradient.addColorStop(1, 'rgba(0, 255, 136, 0)');
+    gradient.addColorStop(0, 'rgba(123, 44, 191, 0.4)');
+    gradient.addColorStop(1, 'rgba(123, 44, 191, 0)');
 
     mainChartInstance = new Chart(ctx, {
         type: 'line',
@@ -80,18 +83,21 @@ function initChart(salesData = [], spendData = [], labels = []) {
             datasets: [{
                 label: 'Receita Líquida (R$)',
                 data: displaySales,
-                borderColor: '#00FF88',
+                borderColor: '#7B2CBF',
                 backgroundColor: gradient,
-                borderWidth: 3,
+                borderWidth: 4,
                 fill: true,
                 tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#00FF88'
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: '#7B2CBF',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2
             }, {
                 label: 'Gasto Ads (R$)',
                 data: displaySpend,
-                borderColor: '#D4AF37',
-                borderWidth: 2,
+                borderColor: '#7C7C7E',
+                borderWidth: 1.5,
                 borderDash: [5, 5],
                 fill: false,
                 tension: 0.4,
@@ -167,7 +173,7 @@ async function syncDashboard() {
         const totalImpressions = spend.reduce((acc, s) => acc + (parseInt(s.impressoes) || 0), 0);
         const totalClicks = spend.reduce((acc, s) => acc + (parseInt(s.cliques) || 0), 0);
         
-        const profit = totalSalesLiquida - totalSpend;
+        const profit = totalSalesLiquida - totalSpend - FIXED_COSTS_DAILY;
         const roi = totalSpend > 0 ? (totalSalesLiquida / totalSpend).toFixed(2) : 0;
 
         // 4. Update Overview Stats
@@ -185,12 +191,28 @@ async function syncDashboard() {
         updateMetric('ads-cpm', cpm);
         updateMetric('ads-spend', totalSpend);
         updateMetric('ads-cpa', cpa);
+        
         const ctrEl = document.getElementById('ads-ctr');
         if (ctrEl) ctrEl.innerText = ctr + '%';
+
+        const cpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : 0;
+        updateMetric('ads-cpc', cpc);
+        const clicksEl = document.getElementById('ads-clicks');
+        if (clicksEl) clicksEl.innerText = totalClicks;
 
         // 6. Update Tables
         renderSalesTable([...sales].reverse(), 'vendas-tab-body');
         renderSalesTable([...sales].reverse().slice(0, 5), 'events-body');
+        
+        // 6b. Process Campaign Performance
+        const campaigns = {};
+        sales.forEach(s => {
+            const tag = s.utm_campaign || 'Direto';
+            if (!campaigns[tag]) campaigns[tag] = { revenue: 0, sales: 0 };
+            campaigns[tag].revenue += parseFloat(s.valor_liquido) || 0;
+            campaigns[tag].sales += 1;
+        });
+        renderCampaignTable(Object.entries(campaigns).sort((a,b) => b[1].revenue - a[1].revenue));
 
         // Update Sync Timestamp
         const now = new Date();
@@ -250,6 +272,24 @@ function renderSalesTable(sales, containerId) {
             </tr>
         `;
     }).join('');
+}
+
+function renderCampaignTable(campaignData) {
+    const container = document.getElementById('campaign-body');
+    if (!container) return;
+
+    if (campaignData.length === 0) {
+        container.innerHTML = `<tr><td colspan="3" style="text-align:center; padding: 20px; color:var(--text-dim);">Nenhum dado por campanha.</td></tr>`;
+        return;
+    }
+
+    container.innerHTML = campaignData.map(([name, data]) => `
+        <tr>
+            <td style="font-weight:600; font-size: 13px;">${name}</td>
+            <td>${data.sales} vds</td>
+            <td style="color:var(--accent-green); font-weight:700; text-align:right;">R$ ${data.revenue.toFixed(2)}</td>
+        </tr>
+    `).join('');
 }
 
 function updateMetric(id, value, isPercentage = false) {
