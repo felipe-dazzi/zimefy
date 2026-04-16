@@ -176,7 +176,7 @@ body::after {
     transition: opacity 1s ease;
 }
 
-/* Sidebar */
+/* Sidebar — fixo */
 aside {
     width: var(--sidebar-w);
     background: #090909;
@@ -185,6 +185,11 @@ aside {
     display: flex;
     flex-direction: column;
     z-index: 100;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    overflow-y: auto;
 }
 
 .logo {
@@ -226,18 +231,14 @@ nav a:hover {
     background: rgba(255,255,255,0.03);
 }
 
-/* Main Content */
+/* Main Content — scroll único */
 main {
     flex: 1;
     padding: 40px 60px;
-    height: 100vh;
-    overflow-y: auto;
+    margin-left: var(--sidebar-w);
+    min-height: 100vh;
     position: relative;
-    scroll-behavior: smooth;
 }
-
-main::-webkit-scrollbar { width: 6px; }
-main::-webkit-scrollbar-thumb { background: var(--card-border); border-radius: 10px; }
 
 .tab-content {
     display: none;
@@ -358,6 +359,63 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
 .glass-panel .data-table-container table td {
     padding: 12px 15px;
 }
+
+/* Period Selector */
+.period-selector {
+    display: flex;
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    padding: 4px;
+    gap: 2px;
+}
+
+.period-btn {
+    padding: 7px 14px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-dim);
+    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.period-btn:hover { color: #fff; background: rgba(255,255,255,0.05); }
+.period-btn.active { background: var(--accent-primary); color: #fff; }
+
+.date-input {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-main);
+    padding: 7px 10px;
+    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    outline: none;
+    cursor: pointer;
+}
+.date-input:focus { border-color: var(--accent-primary); }
+.date-input::-webkit-calendar-picker-indicator { filter: invert(0.5); cursor: pointer; }
+
+.apply-range-btn {
+    padding: 7px 12px;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.apply-range-btn:hover { background: var(--accent-secondary); }
 
 /* BM / Account Selector */
 .bm-selector-section {

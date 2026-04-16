@@ -102,9 +102,25 @@
                     <h1>Dashboard</h1>
                     <p style="color: var(--text-dim); margin-top: 5px; font-size: 13px;">Overview do ecossistema e performance de funil.</p>
                 </div>
-                <div class="date-status">
-                    <span class="status-dot"></span>
-                    Sincronizado: Hoje, 21:42
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <div class="period-selector">
+                        <button class="period-btn active" data-period="today">Hoje</button>
+                        <button class="period-btn" data-period="week">7 dias</button>
+                        <button class="period-btn" data-period="month">30 dias</button>
+                        <button class="period-btn" data-period="custom">
+                            <i data-lucide="calendar" style="width:13px;height:13px;"></i>
+                        </button>
+                    </div>
+                    <div id="custom-range" style="display:none; gap:6px; align-items:center;">
+                        <input type="date" id="date-start" class="date-input">
+                        <span style="color:var(--text-dim); font-size:12px;">→</span>
+                        <input type="date" id="date-end" class="date-input">
+                        <button onclick="applyCustomRange()" class="apply-range-btn">OK</button>
+                    </div>
+                    <div class="date-status">
+                        <span class="status-dot"></span>
+                        <span id="sync-label">Sincronizado: --:--</span>
+                    </div>
                 </div>
             </header>
 

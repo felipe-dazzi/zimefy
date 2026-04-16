@@ -75,12 +75,78 @@ const FIXED_COSTS_DAILY = FIXED_COSTS_MONTHLY / 30;
 let mainChartInstance = null;
 let selectedAdAccountId = "act_4510730299153332";
 let bmData = [];
+let activePeriod = { start: null, end: null, preset: 'today' };
 
 document.addEventListener('DOMContentLoaded', () => {
-    checkFBRedirectToken(); // lê token do hash da URL após redirect do Facebook
+    checkFBRedirectToken();
     initNavigation();
     initChart();
+    initPeriodSelector();
 });
+
+// ─── Period Selector ───────────────────────────────────────────────────────────
+function initPeriodSelector() {
+    document.querySelectorAll('.period-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const period = btn.dataset.period;
+
+            document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            const customRange = document.getElementById('custom-range');
+
+            if (period === 'custom') {
+                customRange.style.display = 'flex';
+                // Preenche datas padrão: últimos 7 dias
+                const today = new Date();
+                const week = new Date(); week.setDate(today.getDate() - 6);
+                document.getElementById('date-end').value = today.toISOString().split('T')[0];
+                document.getElementById('date-start').value = week.toISOString().split('T')[0];
+                return;
+            }
+
+            customRange.style.display = 'none';
+            const { start, end } = getPeriodDates(period);
+            activePeriod = { start, end, preset: period };
+            syncDashboard();
+        });
+    });
+
+    // Inicia com "hoje"
+    const { start, end } = getPeriodDates('today');
+    activePeriod = { start, end, preset: 'today' };
+}
+
+function getPeriodDates(preset) {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    const end = today.toISOString();
+
+    let start;
+    if (preset === 'today') {
+        const s = new Date(); s.setHours(0, 0, 0, 0);
+        start = s.toISOString();
+    } else if (preset === 'week') {
+        const s = new Date(); s.setDate(s.getDate() - 6); s.setHours(0, 0, 0, 0);
+        start = s.toISOString();
+    } else if (preset === 'month') {
+        const s = new Date(); s.setDate(s.getDate() - 29); s.setHours(0, 0, 0, 0);
+        start = s.toISOString();
+    }
+    return { start, end };
+}
+
+function applyCustomRange() {
+    const startVal = document.getElementById('date-start').value;
+    const endVal   = document.getElementById('date-end').value;
+    if (!startVal || !endVal) return;
+    activePeriod = {
+        start: new Date(startVal + 'T00:00:00').toISOString(),
+        end:   new Date(endVal   + 'T23:59:59').toISOString(),
+        preset: 'custom'
+    };
+    syncDashboard();
+}
 
 // Authentication Logic
 async function handleLogin() {
@@ -267,8 +333,8 @@ function initNavigation() {
             link.classList.add('active');
             document.getElementById(tabId).classList.add('active');
 
-            // Scroll main to top
-            document.querySelector('main').scrollTop = 0;
+            // Scroll da página ao topo
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         });
     });
 }
@@ -361,14 +427,17 @@ function initChart(salesData = [], spendData = [], labels = []) {
 
 // Supabase Sync Logic
 async function syncDashboard() {
-    const today = new Date().toISOString().split('T')[0];
+    const { start, end, preset } = activePeriod;
+    const periodStart = start || new Date().toISOString().split('T')[0];
+    const periodEnd   = end   || new Date().toISOString();
 
     try {
-        // 1. Fetch Today's Sales
+        // 1. Fetch Sales no período selecionado
         const { data: sales, error: salesErr } = await _supabase
             .from('zimefy_vendas')
             .select('*')
-            .gte('data_venda', today)
+            .gte('data_venda', periodStart)
+            .lte('data_venda', periodEnd)
             .order('data_venda', { ascending: true });
 
         if (salesErr) throw salesErr;
@@ -407,26 +476,43 @@ async function syncDashboard() {
         // Update Sync Timestamp
         const now = new Date();
         const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
-        const syncEl = document.querySelector('.date-status');
-        if (syncEl) syncEl.innerHTML = `<span class="status-dot"></span> Sincronizado: Hoje, ${timeStr}`;
+        const syncLabel = document.getElementById('sync-label');
+        const periodLabel = preset === 'today' ? `Hoje, ${timeStr}` : preset === 'week' ? 'Últimos 7 dias' : preset === 'month' ? 'Últimos 30 dias' : 'Período personalizado';
+        if (syncLabel) syncLabel.innerText = `Sincronizado: ${periodLabel}`;
 
-        // 7. Process Hourly Data for Chart
-        const hourlySales = Array(24).fill(0);
-        const hourlySpend = Array(24).fill(0);
-        const labels = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
-
-        sales.forEach(s => {
-            const hour = new Date(s.data_venda).getHours();
-            hourlySales[hour] += parseFloat(s.valor_liquido) || 0;
-        });
-
-        // Distribute today's spend evenly across elapsed hours
-        const currentHour = now.getHours();
-        if (totalSpend > 0 && currentHour >= 0) {
-            for (let i = 0; i <= currentHour; i++) hourlySpend[i] = totalSpend / (currentHour + 1);
-        }
-
-        initChart(hourlySales, hourlySpend, labels); 
+        // 7. Gráfico — horário se "hoje", diário se período maior
+        if (preset === 'today') {
+            const hourlySales = Array(24).fill(0);
+            const hourlySpend = Array(24).fill(0);
+            const labels = Array.from({length: 24}, (_, i) => i.toString().padStart(2, '0') + ':00');
+            sales.forEach(s => {
+                const hour = new Date(s.data_venda).getHours();
+                hourlySales[hour] += parseFloat(s.valor_liquido) || 0;
+            });
+            const currentHour = now.getHours();
+            if (totalSpend > 0) {
+                for (let i = 0; i <= currentHour; i++) hourlySpend[i] = totalSpend / (currentHour + 1);
+            }
+            initChart(hourlySales, hourlySpend, labels);
+        } else {
+            // Agrupa por dia
+            const dayMap = {};
+            const cursor = new Date(periodStart);
+            const endDate = new Date(periodEnd);
+            while (cursor <= endDate) {
+                const key = cursor.toISOString().split('T')[0];
+                dayMap[key] = 0;
+                cursor.setDate(cursor.getDate() + 1);
+            }
+            sales.forEach(s => {
+                const key = s.data_venda.split('T')[0];
+                if (dayMap[key] !== undefined) dayMap[key] += parseFloat(s.valor_liquido) || 0;
+            });
+            const labels    = Object.keys(dayMap).map(d => d.slice(5)); // MM-DD
+            const daySales  = Object.values(dayMap);
+            const daySpend  = Array(labels.length).fill(0);
+            initChart(daySales, daySpend, labels);
+        } 
 
     } catch (err) {
         console.error("Sync Error:", err);
