@@ -272,20 +272,61 @@
         <div id="config" class="tab-content">
             <header>
                 <h1>Ajustes do Sistema</h1>
-                <p style="color: var(--text-dim);">Tokens de API, Webhooks e Margens Financeiras.</p>
+                <p style="color: var(--text-dim);">Configurações financeiras e operacionais do dashboard.</p>
             </header>
-            <section class="glass-panel">
-                <div style="max-width: 500px;">
-                    <div style="margin-bottom: 20px;">
-                        <label style="display:block; margin-bottom: 8px; font-size: 13px;">Meta Ads Access Token</label>
-                        <input type="password" value="************************" disabled style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; color: #fff;">
+
+            <!-- Custos Fixos -->
+            <section class="glass-panel" style="margin-bottom: 25px;">
+                <h3 style="margin-bottom: 6px;">Custos Fixos Mensais</h3>
+                <p style="font-size:13px; color:var(--text-dim); margin-bottom: 24px;">Descontados diariamente do Lucro Real (÷ 30).</p>
+                <div class="config-grid">
+                    <div class="config-field">
+                        <label>Ferramentas & SaaS (R$)</label>
+                        <input type="number" id="cfg-ferramentas" class="config-input" placeholder="0,00">
                     </div>
-                    <div>
-                        <label style="display:block; margin-bottom: 8px; font-size: 13px;">Margem de Imposto (%)</label>
-                        <input type="text" value="6%" disabled style="width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--card-border); padding: 12px; border-radius: 10px; color: #fff;">
+                    <div class="config-field">
+                        <label>Tráfego fixo / Retenção (R$)</label>
+                        <input type="number" id="cfg-trafego" class="config-input" placeholder="0,00">
+                    </div>
+                    <div class="config-field">
+                        <label>Outros custos (R$)</label>
+                        <input type="number" id="cfg-outros" class="config-input" placeholder="0,00">
+                    </div>
+                    <div class="config-field">
+                        <label>Total mensal calculado</label>
+                        <div class="config-total" id="cfg-total">R$ 0,00</div>
                     </div>
                 </div>
             </section>
+
+            <!-- Margens -->
+            <section class="glass-panel" style="margin-bottom: 25px;">
+                <h3 style="margin-bottom: 6px;">Margens & Taxas</h3>
+                <p style="font-size:13px; color:var(--text-dim); margin-bottom: 24px;">Usadas no cálculo do valor líquido por venda.</p>
+                <div class="config-grid">
+                    <div class="config-field">
+                        <label>Taxa Kiwify (%)</label>
+                        <input type="number" id="cfg-taxa-kiwify" class="config-input" value="8.99" step="0.01">
+                    </div>
+                    <div class="config-field">
+                        <label>Margem de Segurança (%)</label>
+                        <input type="number" id="cfg-margem" class="config-input" value="3" step="0.1">
+                    </div>
+                    <div class="config-field">
+                        <label>Imposto estimado (%)</label>
+                        <input type="number" id="cfg-imposto" class="config-input" value="6" step="0.1">
+                    </div>
+                    <div class="config-field">
+                        <label>Retenção líquida estimada</label>
+                        <div class="config-total" id="cfg-retencao">0,00%</div>
+                    </div>
+                </div>
+            </section>
+
+            <button onclick="saveConfig()" class="save-config-btn">
+                <i data-lucide="save" style="width:15px;height:15px;"></i> Salvar Configurações
+            </button>
+            <div id="config-saved-msg" style="display:none; margin-top:12px; color:var(--accent-green); font-size:13px; font-weight:600;">✓ Configurações salvas com sucesso.</div>
         </div>
 
     </main>

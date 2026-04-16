@@ -75,8 +75,87 @@ async function showConnectedUI(user) {
     await loadBMAccounts();
 }
 
-const FIXED_COSTS_MONTHLY = 333.89;
-const FIXED_COSTS_DAILY = FIXED_COSTS_MONTHLY / 30;
+let FIXED_COSTS_MONTHLY = 333.89;
+let FIXED_COSTS_DAILY   = FIXED_COSTS_MONTHLY / 30;
+let KIWIFY_FEE_PCT      = 8.99;
+let SAFETY_MARGIN_PCT   = 3;
+let TAX_PCT             = 6;
+
+// ─── Config Tab ────────────────────────────────────────────────────────────────
+function loadConfig() {
+    const saved = JSON.parse(localStorage.getItem('zimefy_config') || '{}');
+
+    const ferramentas = saved.ferramentas || 0;
+    const trafego     = saved.trafego     || 0;
+    const outros      = saved.outros      || 0;
+
+    setValue('cfg-ferramentas',  ferramentas);
+    setValue('cfg-trafego',      trafego);
+    setValue('cfg-outros',       outros);
+    setValue('cfg-taxa-kiwify',  saved.taxaKiwify  ?? 8.99);
+    setValue('cfg-margem',       saved.margem      ?? 3);
+    setValue('cfg-imposto',      saved.imposto     ?? 6);
+
+    applyConfig({ ferramentas, trafego, outros,
+        taxaKiwify: saved.taxaKiwify ?? 8.99,
+        margem:     saved.margem     ?? 3,
+        imposto:    saved.imposto    ?? 6 });
+
+    // live recalc on input
+    ['cfg-ferramentas','cfg-trafego','cfg-outros'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', recalcConfigTotals);
+    });
+    ['cfg-taxa-kiwify','cfg-margem','cfg-imposto'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', recalcConfigTotals);
+    });
+    recalcConfigTotals();
+}
+
+function setValue(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.value = val;
+}
+
+function recalcConfigTotals() {
+    const ferramentas = parseFloat(document.getElementById('cfg-ferramentas')?.value) || 0;
+    const trafego     = parseFloat(document.getElementById('cfg-trafego')?.value)     || 0;
+    const outros      = parseFloat(document.getElementById('cfg-outros')?.value)       || 0;
+    const total = ferramentas + trafego + outros;
+    const totalEl = document.getElementById('cfg-total');
+    if (totalEl) totalEl.innerText = 'R$ ' + total.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+    const taxa    = parseFloat(document.getElementById('cfg-taxa-kiwify')?.value) || 0;
+    const margem  = parseFloat(document.getElementById('cfg-margem')?.value)      || 0;
+    const imposto = parseFloat(document.getElementById('cfg-imposto')?.value)     || 0;
+    const retencao = 100 - taxa - margem - imposto;
+    const retEl = document.getElementById('cfg-retencao');
+    if (retEl) retEl.innerText = retencao.toFixed(2) + '%';
+}
+
+function applyConfig(cfg) {
+    FIXED_COSTS_MONTHLY = (cfg.ferramentas || 0) + (cfg.trafego || 0) + (cfg.outros || 0);
+    FIXED_COSTS_DAILY   = FIXED_COSTS_MONTHLY / 30;
+    KIWIFY_FEE_PCT      = cfg.taxaKiwify  ?? 8.99;
+    SAFETY_MARGIN_PCT   = cfg.margem      ?? 3;
+    TAX_PCT             = cfg.imposto     ?? 6;
+}
+
+function saveConfig() {
+    const cfg = {
+        ferramentas: parseFloat(document.getElementById('cfg-ferramentas')?.value) || 0,
+        trafego:     parseFloat(document.getElementById('cfg-trafego')?.value)     || 0,
+        outros:      parseFloat(document.getElementById('cfg-outros')?.value)       || 0,
+        taxaKiwify:  parseFloat(document.getElementById('cfg-taxa-kiwify')?.value) || 8.99,
+        margem:      parseFloat(document.getElementById('cfg-margem')?.value)      || 3,
+        imposto:     parseFloat(document.getElementById('cfg-imposto')?.value)     || 6,
+    };
+    localStorage.setItem('zimefy_config', JSON.stringify(cfg));
+    applyConfig(cfg);
+
+    const msg = document.getElementById('config-saved-msg');
+    if (msg) { msg.style.display = 'block'; setTimeout(() => msg.style.display = 'none', 3000); }
+    lucide.createIcons();
+}
 
 let mainChartInstance = null;
 let selectedAdAccountId = "act_4510730299153332";
@@ -167,6 +246,9 @@ async function handleLogin() {
         overlay.style.display = 'none';
         app.style.display = 'flex';
         setTimeout(() => app.style.opacity = '1', 10);
+
+        // Carrega configurações salvas
+        loadConfig();
 
         // Start Syncing Data
         await syncDashboard();

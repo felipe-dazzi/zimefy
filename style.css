@@ -369,6 +369,66 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     padding: 12px 15px;
 }
 
+/* Config Tab */
+.config-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.config-field label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+}
+
+.config-input {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 10px;
+    color: var(--text-main);
+    padding: 12px 14px;
+    font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 600;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.config-input:focus { border-color: var(--accent-primary); }
+
+.config-total {
+    background: rgba(123,44,191,0.08);
+    border: 1px solid rgba(123,44,191,0.2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-secondary);
+}
+
+.save-config-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 28px;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: 12px;
+    color: #fff;
+    font-size: 14px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+.save-config-btn:hover { background: var(--accent-secondary); transform: translateY(-2px); }
+
 /* Period Selector */
 .period-selector {
     display: flex;
