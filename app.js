@@ -49,10 +49,14 @@ async function applyManualToken() {
     await showConnectedUI({ name: 'Token Manual', picture: null });
 }
 
-function onFBConnected() {
-    FB.api('/me', { fields: 'name,picture.type(small)' }, async user => {
-        await showConnectedUI(user);
-    });
+async function onFBConnected() {
+    try {
+        const res = await fetch(`${META_GRAPH}/me?fields=name,picture.type(small)&access_token=${META_TOKEN}`);
+        const user = await res.json();
+        await showConnectedUI(user.error ? { name: 'Facebook', picture: null } : user);
+    } catch {
+        await showConnectedUI({ name: 'Facebook', picture: null });
+    }
 }
 
 async function showConnectedUI(user) {
@@ -60,11 +64,13 @@ async function showConnectedUI(user) {
     const connectArea = document.getElementById('fb-connect-area');
     const infoEl = document.getElementById('fb-user-info');
     if (infoEl) {
-        const pic = user?.picture?.data?.url ? `<img src="${user.picture.data.url}">` : '';
-        infoEl.innerHTML = `${pic}<span>${user?.name || 'Conectado'}</span>`;
+        const pic = user?.picture?.data?.url
+            ? `<img src="${user.picture.data.url}">`
+            : `<div style="width:28px;height:28px;border-radius:50%;background:var(--accent-primary);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;">${(user?.name || 'F')[0]}</div>`;
+        infoEl.innerHTML = `${pic}<span class="fb-user-name">${user?.name || 'Conectado'}</span><span class="fb-connected-dot"></span>`;
     }
     connectArea.style.display = 'none';
-    area.style.display = 'block';
+    area.style.display = 'flex';
     lucide.createIcons();
     await loadBMAccounts();
 }

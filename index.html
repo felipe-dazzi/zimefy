@@ -72,19 +72,30 @@
             </div>
 
             <!-- Estado: conectado (oculto até login) -->
-            <div id="fb-connected-area" style="display:none;">
+            <div id="fb-connected-area" style="display:none; flex-direction:column; gap:12px;">
+
+                <!-- Perfil -->
                 <div id="fb-user-info" class="fb-user-info"></div>
-                <div class="selector-label" style="margin-top:14px;"><i data-lucide="building-2" style="width:11px;height:11px;"></i> Business Manager</div>
-                <div class="select-wrapper">
-                    <select id="bm-selector" class="meta-select"></select>
-                    <i data-lucide="chevron-down" class="select-chevron"></i>
+
+                <!-- BM -->
+                <div>
+                    <div class="selector-label"><i data-lucide="building-2" style="width:11px;height:11px;"></i> Business Manager</div>
+                    <div class="select-wrapper">
+                        <select id="bm-selector" class="meta-select"></select>
+                        <i data-lucide="chevron-down" class="select-chevron"></i>
+                    </div>
                 </div>
-                <div class="selector-label" style="margin-top:14px;"><i data-lucide="credit-card" style="width:11px;height:11px;"></i> Conta de Anúncio</div>
-                <div class="select-wrapper">
-                    <select id="account-selector" class="meta-select"></select>
-                    <i data-lucide="chevron-down" class="select-chevron"></i>
+
+                <!-- Conta -->
+                <div>
+                    <div class="selector-label"><i data-lucide="credit-card" style="width:11px;height:11px;"></i> Conta de Anúncio</div>
+                    <div class="select-wrapper">
+                        <select id="account-selector" class="meta-select"></select>
+                        <i data-lucide="chevron-down" class="select-chevron"></i>
+                    </div>
+                    <div id="account-status-badge" class="account-status-badge" style="margin-top:6px;"></div>
                 </div>
-                <div id="account-status-badge" class="account-status-badge"></div>
+
                 <button onclick="fbLogout()" class="fb-disconnect-btn">Desconectar</button>
             </div>
         </div>

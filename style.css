@@ -25,7 +25,7 @@ body {
     color: var(--text-main);
     display: flex;
     min-height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 /* Background Gradients (Clickmax style - Very subtle deep purple blobs) */
@@ -236,9 +236,15 @@ main {
     flex: 1;
     padding: 40px 60px;
     margin-left: var(--sidebar-w);
-    min-height: 100vh;
+    height: 100vh;
+    overflow-y: auto;
     position: relative;
 }
+
+main::-webkit-scrollbar { width: 6px; }
+main::-webkit-scrollbar-track { background: transparent; }
+main::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 10px; }
+main::-webkit-scrollbar-thumb:hover { background: var(--accent-secondary); }
 
 .tab-content {
     display: none;
@@ -519,20 +525,34 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
 .fb-user-info {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 10px;
-    background: rgba(24,119,242,0.08);
-    border: 1px solid rgba(24,119,242,0.2);
-    border-radius: 10px;
-    font-size: 12px;
-    font-weight: 600;
-    color: #5b9cf6;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(123, 44, 191, 0.08);
+    border: 1px solid rgba(123, 44, 191, 0.25);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-main);
     margin-bottom: 4px;
 }
 .fb-user-info img {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
+    border: 2px solid var(--accent-primary);
+}
+.fb-user-info .fb-user-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.fb-user-info .fb-connected-dot {
+    width: 7px;
+    height: 7px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .account-status-badge {
