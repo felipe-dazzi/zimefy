@@ -19,12 +19,18 @@ window.fbAsyncInit = function () {
 };
 
 async function fbLogin() {
+    if (typeof FB === 'undefined') {
+        alert('SDK do Facebook ainda não carregou. Aguarde 2 segundos e tente novamente.');
+        return;
+    }
     FB.login(response => {
         if (response.status === 'connected') {
             META_TOKEN = response.authResponse.accessToken;
             onFBConnected();
+        } else {
+            alert('Login cancelado ou sem permissão. Certifique-se de aprovar todas as permissões solicitadas.');
         }
-    }, { scope: 'ads_read,business_management,ads_management' });
+    }, { scope: 'ads_read,business_management,ads_management', auth_type: 'rerequest' });
 }
 
 function fbLogout() {
@@ -37,9 +43,16 @@ function fbLogout() {
     });
 }
 
-async function onFBConnected() {
-    // Fetch user name + photo
-    FB.api('/me', { fields: 'name,picture.type(small)' }, user => {
+async function applyManualToken() {
+    const input = document.getElementById('manual-token-input');
+    const token = input?.value.trim();
+    if (!token) return;
+    META_TOKEN = token;
+    await onFBConnected();
+}
+
+function onFBConnected() {
+    FB.api('/me', { fields: 'name,picture.type(small)' }, async user => {
         const area = document.getElementById('fb-connected-area');
         const connectArea = document.getElementById('fb-connect-area');
         const infoEl = document.getElementById('fb-user-info');
@@ -50,8 +63,8 @@ async function onFBConnected() {
         connectArea.style.display = 'none';
         area.style.display = 'block';
         lucide.createIcons();
+        await loadBMAccounts();
     });
-    await loadBMAccounts();
 }
 
 const FIXED_COSTS_MONTHLY = 333.89;
@@ -120,14 +133,27 @@ async function loadBMAccounts() {
             bmData.push({ id: bm.id, name: bm.name, accounts: unique });
         }
 
-        bmSel.innerHTML = bmData.map(bm => `<option value="${bm.id}">${bm.name}</option>`).join('');
-        section.style.display = 'block';
-        lucide.createIcons();
+        if (bmData.length === 0) {
+            bmSel.innerHTML = '<option>Nenhuma BM encontrada</option>';
+            return;
+        }
+
+        bmSel.innerHTML = bmData.map(bm =>
+            `<option value="${bm.id}">${bm.name} (${bm.accounts.length} conta${bm.accounts.length !== 1 ? 's' : ''})</option>`
+        ).join('');
 
         populateAccountSelector(bmData[0]?.id);
 
-        bmSel.addEventListener('change', e => populateAccountSelector(e.target.value));
-        accSel.addEventListener('change', e => {
+        // Remove listeners antigos antes de adicionar novos
+        const newBmSel = bmSel.cloneNode(true);
+        bmSel.parentNode.replaceChild(newBmSel, bmSel);
+        const newAccSel = accSel.cloneNode(true);
+        accSel.parentNode.replaceChild(newAccSel, accSel);
+
+        document.getElementById('bm-selector').addEventListener('change', e => {
+            populateAccountSelector(e.target.value);
+        });
+        document.getElementById('account-selector').addEventListener('change', e => {
             selectedAdAccountId = e.target.value;
             updateAccountBadge(e.target.selectedOptions[0]);
             syncMetaInsights();
@@ -148,12 +174,11 @@ function populateAccountSelector(bmId) {
     accSel.innerHTML = bm.accounts.length
         ? bm.accounts.map(a => {
             const isActive = a.account_status === 1;
-            const label = (a.name || a.account_id) + (isActive ? '' : ' (inativa)');
+            const label = (a.name || a.account_id) + (isActive ? '' : ' ⚠ inativa');
             return `<option value="${a.id}" data-status="${a.account_status}">${label}</option>`;
           }).join('')
-        : '<option value="">Nenhuma conta encontrada</option>';
+        : '<option value="">Nenhuma conta nesta BM</option>';
 
-    // prefer currently selected account if it belongs to this BM
     const match = bm.accounts.find(a => a.id === selectedAdAccountId);
     if (match) accSel.value = selectedAdAccountId;
     else selectedAdAccountId = accSel.value;

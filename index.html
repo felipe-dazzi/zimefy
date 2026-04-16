@@ -61,6 +61,13 @@
                 <button onclick="fbLogin()" class="fb-connect-btn">
                     <i data-lucide="log-in" style="width:14px;height:14px;"></i> Conectar Facebook
                 </button>
+                <div style="margin-top:12px;">
+                    <div class="selector-label" style="margin-bottom:6px;">Ou cole o token manualmente</div>
+                    <div style="display:flex;gap:6px;">
+                        <input type="password" id="manual-token-input" placeholder="EAA..." class="meta-select" style="flex:1; padding:8px 10px; font-size:11px;">
+                        <button onclick="applyManualToken()" style="background:var(--accent-primary);border:none;border-radius:8px;color:#fff;padding:8px 10px;font-size:11px;cursor:pointer;font-family:inherit;font-weight:700;">OK</button>
+                    </div>
+                </div>
             </div>
 
             <!-- Estado: conectado (oculto até login) -->
