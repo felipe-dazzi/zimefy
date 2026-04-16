@@ -110,50 +110,53 @@ async function handleLogin() {
 
 async function loadBMAccounts() {
     const bmSel = document.getElementById('bm-selector');
-    const accSel = document.getElementById('account-selector');
     const section = document.getElementById('bm-selector-section');
 
-    bmSel.innerHTML = '<option>Carregando BMs...</option>';
+    bmSel.innerHTML = '<option>Carregando...</option>';
 
     try {
-        const bmsRes = await fetch(`${META_GRAPH}/me/businesses?fields=id,name&limit=50&access_token=${META_TOKEN}`);
-        const bmsJson = await bmsRes.json();
+        // Busca todas as contas de anúncio que o usuário tem acesso (independente de ser admin da BM)
+        let allAccounts = [];
+        let url = `${META_GRAPH}/me/adaccounts?fields=name,account_id,account_status,business{id,name}&limit=100&access_token=${META_TOKEN}`;
 
-        if (bmsJson.error) throw new Error(bmsJson.error.message);
-
-        bmData = [];
-
-        for (const bm of (bmsJson.data || [])) {
-            const [ownedRes, clientRes] = await Promise.all([
-                fetch(`${META_GRAPH}/${bm.id}/owned_ad_accounts?fields=name,account_id,account_status&limit=100&access_token=${META_TOKEN}`),
-                fetch(`${META_GRAPH}/${bm.id}/client_ad_accounts?fields=name,account_id,account_status&limit=100&access_token=${META_TOKEN}`)
-            ]);
-            const owned = await ownedRes.json();
-            const client = await clientRes.json();
-
-            const allAccounts = [...(owned.data || []), ...(client.data || [])];
-            const unique = allAccounts.filter((a, i, self) => self.findIndex(b => b.id === a.id) === i);
-
-            bmData.push({ id: bm.id, name: bm.name, accounts: unique });
+        // Percorre paginação
+        while (url) {
+            const res = await fetch(url);
+            const json = await res.json();
+            if (json.error) throw new Error(json.error.message);
+            allAccounts = allAccounts.concat(json.data || []);
+            url = json.paging?.next || null;
         }
 
+        // Agrupa por BM
+        const bmMap = {};
+        for (const acc of allAccounts) {
+            const bmId   = acc.business?.id   || '__pessoal__';
+            const bmName = acc.business?.name || 'Contas Pessoais';
+            if (!bmMap[bmId]) bmMap[bmId] = { id: bmId, name: bmName, accounts: [] };
+            bmMap[bmId].accounts.push(acc);
+        }
+
+        bmData = Object.values(bmMap);
+
         if (bmData.length === 0) {
-            bmSel.innerHTML = '<option>Nenhuma BM encontrada</option>';
+            bmSel.innerHTML = '<option>Nenhuma conta encontrada</option>';
             return;
         }
 
-        bmSel.innerHTML = bmData.map(bm =>
+        // Popula seletor de BM
+        const newBmSel = bmSel.cloneNode(false);
+        newBmSel.innerHTML = bmData.map(bm =>
             `<option value="${bm.id}">${bm.name} (${bm.accounts.length} conta${bm.accounts.length !== 1 ? 's' : ''})</option>`
         ).join('');
-
-        populateAccountSelector(bmData[0]?.id);
-
-        // Remove listeners antigos antes de adicionar novos
-        const newBmSel = bmSel.cloneNode(true);
         bmSel.parentNode.replaceChild(newBmSel, bmSel);
-        const newAccSel = accSel.cloneNode(true);
+
+        // Popula seletor de conta
+        const accSel = document.getElementById('account-selector');
+        const newAccSel = accSel.cloneNode(false);
         accSel.parentNode.replaceChild(newAccSel, accSel);
 
+        // Event listeners nos novos elementos
         document.getElementById('bm-selector').addEventListener('change', e => {
             populateAccountSelector(e.target.value);
         });
@@ -163,10 +166,11 @@ async function loadBMAccounts() {
             syncMetaInsights();
         });
 
+        populateAccountSelector(bmData[0]?.id);
+
     } catch (err) {
         console.error('BM load error:', err);
-        bmSel.innerHTML = '<option>Erro ao carregar</option>';
-        section.style.display = 'block';
+        bmSel.innerHTML = `<option>Erro: ${err.message}</option>`;
     }
 }
 
