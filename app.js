@@ -148,27 +148,21 @@ async function loadBMAccounts() {
         }
 
         // Popula seletor de BM
-        const newBmSel = bmSel.cloneNode(false);
-        newBmSel.innerHTML = bmData.map(bm =>
+        bmSel.innerHTML = bmData.map(bm =>
             `<option value="${bm.id}">${bm.name} (${bm.accounts.length} conta${bm.accounts.length !== 1 ? 's' : ''})</option>`
         ).join('');
-        bmSel.parentNode.replaceChild(newBmSel, bmSel);
 
-        // Popula seletor de conta
-        const accSel = document.getElementById('account-selector');
-        const newAccSel = accSel.cloneNode(false);
-        accSel.parentNode.replaceChild(newAccSel, accSel);
+        // Listener de troca de BM → atualiza contas
+        bmSel.onchange = e => populateAccountSelector(e.target.value);
 
-        // Event listeners nos novos elementos
-        document.getElementById('bm-selector').addEventListener('change', e => {
-            populateAccountSelector(e.target.value);
-        });
-        document.getElementById('account-selector').addEventListener('change', e => {
+        // Listener de troca de conta → atualiza métricas
+        document.getElementById('account-selector').onchange = e => {
             selectedAdAccountId = e.target.value;
             updateAccountBadge(e.target.selectedOptions[0]);
             syncMetaInsights();
-        });
+        };
 
+        // Popula contas da primeira BM
         populateAccountSelector(bmData[0]?.id);
 
     } catch (err) {
