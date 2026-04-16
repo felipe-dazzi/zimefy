@@ -7,40 +7,38 @@ const META_FB_APP_ID = "1311246474406702";
 const META_GRAPH = "https://graph.facebook.com/v19.0";
 let META_TOKEN = "";
 
-// ─── Facebook SDK Init ─────────────────────────────────────────────────────────
-window.fbAsyncInit = function () {
-    FB.init({ appId: META_FB_APP_ID, version: 'v19.0', xfbml: false, cookie: true });
-    FB.getLoginStatus(response => {
-        if (response.status === 'connected') {
-            META_TOKEN = response.authResponse.accessToken;
-            onFBConnected();
-        }
-    });
-};
-
-async function fbLogin() {
-    if (typeof FB === 'undefined') {
-        alert('SDK do Facebook ainda não carregou. Aguarde 2 segundos e tente novamente.');
-        return;
-    }
-    FB.login(response => {
-        if (response.status === 'connected') {
-            META_TOKEN = response.authResponse.accessToken;
-            onFBConnected();
-        } else {
-            alert('Login cancelado ou sem permissão. Certifique-se de aprovar todas as permissões solicitadas.');
-        }
-    }, { scope: 'ads_read,business_management,ads_management', auth_type: 'rerequest' });
+// ─── Facebook OAuth (redirect flow — sem popup) ────────────────────────────────
+function fbLogin() {
+    const redirectUri = encodeURIComponent(window.location.origin + window.location.pathname);
+    const scope = 'ads_read,business_management,ads_management';
+    window.location.href = `https://www.facebook.com/dialog/oauth?client_id=${META_FB_APP_ID}&redirect_uri=${redirectUri}&scope=${scope}&response_type=token`;
 }
 
 function fbLogout() {
-    FB.logout(() => {
-        META_TOKEN = "";
-        document.getElementById('fb-connected-area').style.display = 'none';
-        document.getElementById('fb-connect-area').style.display = 'block';
-        document.getElementById('bm-selector').innerHTML = '';
-        document.getElementById('account-selector').innerHTML = '';
-    });
+    META_TOKEN = "";
+    sessionStorage.removeItem('zimefy_meta_token');
+    document.getElementById('fb-connected-area').style.display = 'none';
+    document.getElementById('fb-connect-area').style.display = 'block';
+}
+
+// Lê o token do hash da URL após redirect do Facebook
+function checkFBRedirectToken() {
+    const hash = window.location.hash;
+    if (!hash) return;
+    const params = new URLSearchParams(hash.replace('#', '?').slice(1));
+    const token = params.get('access_token');
+    if (token) {
+        META_TOKEN = token;
+        sessionStorage.setItem('zimefy_meta_token', token);
+        // Limpa o hash da URL sem recarregar
+        history.replaceState(null, '', window.location.pathname);
+    }
+}
+
+// Recupera sessão salva
+function restoreFBSession() {
+    const saved = sessionStorage.getItem('zimefy_meta_token');
+    if (saved) META_TOKEN = saved;
 }
 
 async function applyManualToken() {
@@ -79,6 +77,7 @@ let selectedAdAccountId = "act_4510730299153332";
 let bmData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
+    checkFBRedirectToken(); // lê token do hash da URL após redirect do Facebook
     initNavigation();
     initChart();
 });
@@ -101,6 +100,10 @@ async function handleLogin() {
         await syncDashboard();
         setInterval(syncDashboard, 5 * 60 * 1000);
         setInterval(syncMetaInsights, 5 * 60 * 1000);
+
+        // Restaura sessão Meta se existir
+        restoreFBSession();
+        if (META_TOKEN) await showConnectedUI({ name: 'Sessão Restaurada', picture: null });
     } else {
         errorEl.style.display = 'block';
     }
