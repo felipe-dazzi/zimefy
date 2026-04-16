@@ -3,14 +3,19 @@ const SUPABASE_URL = "https://dclwipihgyevdmohsnsd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SZ1qn1uzYjfSffyHLnQTig_1JTg8j26";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+const META_TOKEN = "EAASoklxR6y4BRENfdj4y3q2bpHhcHFJceZC8vA0MkSwkO72foqGyweomWmMXldU9f9Ras4ZChA8KCgZCupVr815betZBTZC2MtZBO2yZAoZCdiDlCysU3ZCwcF8QxHq12TXb8cAFGkI0DISCefXbZChFQaspw7HcwxZAO4rTTfBGeezjZAAInOHzbPfq7zrlAF0qovkceKNnBcry3pm5H2EraTC3UU6B457p5KMZBe5wEEaOIZAAzHm3kF0Hhz8b7Yrs7OXhAmDfohy4mOOCwWtlUrmBo40txA0zVOVd5mZBQZDZD";
+const META_GRAPH = "https://graph.facebook.com/v19.0";
+
 const FIXED_COSTS_MONTHLY = 333.89;
 const FIXED_COSTS_DAILY = FIXED_COSTS_MONTHLY / 30;
 
 let mainChartInstance = null;
+let selectedAdAccountId = "act_4510730299153332";
+let bmData = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initNavigation();
-    initChart(); // Initialize with zeros
+    initChart();
 });
 
 // Authentication Logic
@@ -28,10 +33,142 @@ async function handleLogin() {
         setTimeout(() => app.style.opacity = '1', 10);
 
         // Start Syncing Data
+        await loadBMAccounts();
         await syncDashboard();
         setInterval(syncDashboard, 5 * 60 * 1000);
+        setInterval(syncMetaInsights, 5 * 60 * 1000);
     } else {
         errorEl.style.display = 'block';
+    }
+}
+
+// ─── Meta BM / Account Selector ───────────────────────────────────────────────
+
+async function loadBMAccounts() {
+    const bmSel = document.getElementById('bm-selector');
+    const accSel = document.getElementById('account-selector');
+    const section = document.getElementById('bm-selector-section');
+
+    bmSel.innerHTML = '<option>Carregando BMs...</option>';
+
+    try {
+        const bmsRes = await fetch(`${META_GRAPH}/me/businesses?fields=id,name&limit=50&access_token=${META_TOKEN}`);
+        const bmsJson = await bmsRes.json();
+
+        if (bmsJson.error) throw new Error(bmsJson.error.message);
+
+        bmData = [];
+
+        for (const bm of (bmsJson.data || [])) {
+            const [ownedRes, clientRes] = await Promise.all([
+                fetch(`${META_GRAPH}/${bm.id}/owned_ad_accounts?fields=name,account_id,account_status&limit=100&access_token=${META_TOKEN}`),
+                fetch(`${META_GRAPH}/${bm.id}/client_ad_accounts?fields=name,account_id,account_status&limit=100&access_token=${META_TOKEN}`)
+            ]);
+            const owned = await ownedRes.json();
+            const client = await clientRes.json();
+
+            const allAccounts = [...(owned.data || []), ...(client.data || [])];
+            const unique = allAccounts.filter((a, i, self) => self.findIndex(b => b.id === a.id) === i);
+
+            bmData.push({ id: bm.id, name: bm.name, accounts: unique });
+        }
+
+        bmSel.innerHTML = bmData.map(bm => `<option value="${bm.id}">${bm.name}</option>`).join('');
+        section.style.display = 'block';
+        lucide.createIcons();
+
+        populateAccountSelector(bmData[0]?.id);
+
+        bmSel.addEventListener('change', e => populateAccountSelector(e.target.value));
+        accSel.addEventListener('change', e => {
+            selectedAdAccountId = e.target.value;
+            updateAccountBadge(e.target.selectedOptions[0]);
+            syncMetaInsights();
+        });
+
+    } catch (err) {
+        console.error('BM load error:', err);
+        bmSel.innerHTML = '<option>Erro ao carregar</option>';
+        section.style.display = 'block';
+    }
+}
+
+function populateAccountSelector(bmId) {
+    const bm = bmData.find(b => b.id === bmId);
+    const accSel = document.getElementById('account-selector');
+    if (!bm || !accSel) return;
+
+    accSel.innerHTML = bm.accounts.length
+        ? bm.accounts.map(a => {
+            const isActive = a.account_status === 1;
+            const label = (a.name || a.account_id) + (isActive ? '' : ' (inativa)');
+            return `<option value="${a.id}" data-status="${a.account_status}">${label}</option>`;
+          }).join('')
+        : '<option value="">Nenhuma conta encontrada</option>';
+
+    // prefer currently selected account if it belongs to this BM
+    const match = bm.accounts.find(a => a.id === selectedAdAccountId);
+    if (match) accSel.value = selectedAdAccountId;
+    else selectedAdAccountId = accSel.value;
+
+    updateAccountBadge(accSel.selectedOptions[0]);
+    syncMetaInsights();
+}
+
+function updateAccountBadge(option) {
+    const badge = document.getElementById('account-status-badge');
+    if (!badge || !option) return;
+    const status = option.dataset.status;
+    if (status === '1') {
+        badge.className = 'account-status-badge active';
+        badge.innerHTML = '<span class="status-dot"></span> Conta ativa';
+    } else if (status) {
+        badge.className = 'account-status-badge inactive';
+        badge.innerHTML = '● Conta inativa';
+    } else {
+        badge.className = 'account-status-badge';
+        badge.innerHTML = '';
+    }
+}
+
+// ─── Live Meta Insights ────────────────────────────────────────────────────────
+
+async function syncMetaInsights() {
+    if (!selectedAdAccountId) return;
+    try {
+        const fields = 'spend,impressions,clicks,cpm,ctr,cpc,actions,reach';
+        const res = await fetch(
+            `${META_GRAPH}/${selectedAdAccountId}/insights?fields=${fields}&date_preset=today&access_token=${META_TOKEN}`
+        );
+        const json = await res.json();
+        if (json.error) throw new Error(json.error.message);
+
+        const d = json.data?.[0] || {};
+        const spend       = parseFloat(d.spend) || 0;
+        const impressions = parseInt(d.impressions) || 0;
+        const clicks      = parseInt(d.clicks) || 0;
+        const cpm         = parseFloat(d.cpm) || 0;
+        const ctr         = parseFloat(d.ctr) || 0;
+        const cpc         = parseFloat(d.cpc) || 0;
+        const purchases   = (d.actions || []).find(a => a.action_type === 'purchase');
+        const numSales    = parseInt(purchases?.value) || 0;
+        const cpa         = numSales > 0 ? spend / numSales : 0;
+
+        // Anúncios tab
+        updateMetric('ads-cpm', cpm);
+        updateMetric('ads-spend', spend);
+        updateMetric('ads-cpa', cpa);
+        updateMetric('ads-cpc', cpc);
+        const ctrEl = document.getElementById('ads-ctr');
+        if (ctrEl) ctrEl.innerText = ctr.toFixed(2) + '%';
+        const clicksEl = document.getElementById('ads-clicks');
+        if (clicksEl) clicksEl.innerText = clicks.toLocaleString('pt-BR');
+
+        // Dashboard tab — atualiza gasto ads com conta selecionada
+        updateMetric('stat-gasto', spend);
+
+    } catch (err) {
+        console.error('Meta Insights error:', err);
     }
 }
 
@@ -157,48 +294,24 @@ async function syncDashboard() {
             .gte('data_venda', today)
             .order('data_venda', { ascending: true });
 
-        // 2. Fetch Today's Spend
-        const { data: spend, error: spendErr } = await _supabase
-            .from('zimefy_gastos_ads')
-            .select('*')
-            .eq('data_referencia', today);
-
         if (salesErr) throw salesErr;
-        if (spendErr) throw spendErr;
 
-        // 3. Process Core Metrics
+        // 2. Process Core Metrics (spend comes from syncMetaInsights)
         const totalSalesLiquida = sales.reduce((acc, s) => acc + (parseFloat(s.valor_liquido) || 0), 0);
-        const totalSalesBruta = sales.reduce((acc, s) => acc + (parseFloat(s.valor_bruto) || 0), 0);
-        const totalSpend = spend.reduce((acc, s) => acc + (parseFloat(s.valor_gasto) || 0), 0);
-        const totalImpressions = spend.reduce((acc, s) => acc + (parseInt(s.impressoes) || 0), 0);
-        const totalClicks = spend.reduce((acc, s) => acc + (parseInt(s.cliques) || 0), 0);
-        
+        const totalSalesBruta   = sales.reduce((acc, s) => acc + (parseFloat(s.valor_bruto) || 0), 0);
+
+        // Read current spend from the ads metric element (populated by syncMetaInsights)
+        const spendEl = document.getElementById('stat-gasto');
+        const totalSpend = spendEl ? parseFloat(spendEl.innerText.replace(/[^\d,]/g, '').replace(',', '.')) || 0 : 0;
+
         const profit = totalSalesLiquida - totalSpend - FIXED_COSTS_DAILY;
         const roi = totalSpend > 0 ? (totalSalesLiquida / totalSpend).toFixed(2) : 0;
 
-        // 4. Update Overview Stats
+        // 3. Update Overview Stats
         updateMetric('stat-receita-bruta', totalSalesBruta);
-        updateMetric('stat-gasto', totalSpend);
         updateMetric('stat-lucro', profit);
         const roiEl = document.getElementById('stat-roi');
         if (roiEl) roiEl.innerText = roi + 'x';
-
-        // 5. Update Ads Intelligence Tab
-        const cpa = sales.length > 0 ? (totalSpend / sales.length).toFixed(2) : 0;
-        const cpm = totalImpressions > 0 ? ((totalSpend / totalImpressions) * 1000).toFixed(2) : 0;
-        const ctr = totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : 0;
-
-        updateMetric('ads-cpm', cpm);
-        updateMetric('ads-spend', totalSpend);
-        updateMetric('ads-cpa', cpa);
-        
-        const ctrEl = document.getElementById('ads-ctr');
-        if (ctrEl) ctrEl.innerText = ctr + '%';
-
-        const cpc = totalClicks > 0 ? (totalSpend / totalClicks).toFixed(2) : 0;
-        updateMetric('ads-cpc', cpc);
-        const clicksEl = document.getElementById('ads-clicks');
-        if (clicksEl) clicksEl.innerText = totalClicks;
 
         // 6. Update Tables
         renderSalesTable([...sales].reverse(), 'vendas-tab-body');
@@ -230,16 +343,10 @@ async function syncDashboard() {
             hourlySales[hour] += parseFloat(s.valor_liquido) || 0;
         });
 
-        // Simplified Spend: Distributed evenly for demo if only 1 entry, 
-        // but in production it's better to fetch timestamped logs.
-        if (spend.length === 1) {
-            const currentHour = now.getHours();
-            for(let i=0; i <= currentHour; i++) hourlySpend[i] = totalSpend / (currentHour + 1);
-        } else {
-            spend.forEach(s => {
-                const hour = new Date(s.last_sync || s.data_referencia).getHours();
-                hourlySpend[hour] += parseFloat(s.valor_gasto) || 0;
-            });
+        // Distribute today's spend evenly across elapsed hours
+        const currentHour = now.getHours();
+        if (totalSpend > 0 && currentHour >= 0) {
+            for (let i = 0; i <= currentHour; i++) hourlySpend[i] = totalSpend / (currentHour + 1);
         }
 
         initChart(hourlySales, hourlySpend, labels); 

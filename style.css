@@ -359,6 +359,85 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     padding: 12px 15px;
 }
 
+/* BM / Account Selector */
+.bm-selector-section {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid var(--card-border);
+}
+
+.selector-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.select-wrapper {
+    position: relative;
+}
+
+.meta-select {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--card-border);
+    color: var(--text-main);
+    padding: 10px 32px 10px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.meta-select:focus,
+.meta-select:hover {
+    border-color: var(--accent-primary);
+    background: rgba(123, 44, 191, 0.06);
+}
+
+.meta-select option {
+    background: #111;
+    color: #fff;
+}
+
+.select-chevron {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 14px;
+    height: 14px;
+    color: var(--text-dim);
+    pointer-events: none;
+}
+
+.account-status-badge {
+    margin-top: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text-dim);
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.account-status-badge.active { color: var(--accent-green); }
+.account-status-badge.inactive { color: var(--danger); }
+
 /* RESPONSIVE */
 @media (max-width: 1200px) {
     .content-row { grid-template-columns: 1fr; }
