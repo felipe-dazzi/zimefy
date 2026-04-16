@@ -89,17 +89,17 @@ function loadConfig() {
     const trafego     = saved.trafego     || 0;
     const outros      = saved.outros      || 0;
 
-    setValue('cfg-ferramentas',  ferramentas);
-    setValue('cfg-trafego',      trafego);
-    setValue('cfg-outros',       outros);
-    setValue('cfg-taxa-kiwify',  saved.taxaKiwify  ?? 8.99);
-    setValue('cfg-margem',       saved.margem      ?? 3);
-    setValue('cfg-imposto',      saved.imposto     ?? 6);
+    if (ferramentas) setValue('cfg-ferramentas', ferramentas);
+    if (trafego)     setValue('cfg-trafego',     trafego);
+    if (outros)      setValue('cfg-outros',       outros);
+    if (saved.taxaKiwify != null) setValue('cfg-taxa-kiwify', saved.taxaKiwify);
+    if (saved.margem     != null) setValue('cfg-margem',      saved.margem);
+    if (saved.imposto    != null) setValue('cfg-imposto',     saved.imposto);
 
     applyConfig({ ferramentas, trafego, outros,
-        taxaKiwify: saved.taxaKiwify ?? 8.99,
-        margem:     saved.margem     ?? 3,
-        imposto:    saved.imposto    ?? 6 });
+        taxaKiwify: saved.taxaKiwify ?? 0,
+        margem:     saved.margem     ?? 0,
+        imposto:    saved.imposto    ?? 0 });
 
     // live recalc on input
     ['cfg-ferramentas','cfg-trafego','cfg-outros'].forEach(id => {
