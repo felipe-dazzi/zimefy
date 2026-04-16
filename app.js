@@ -48,23 +48,27 @@ async function applyManualToken() {
     const token = input?.value.trim();
     if (!token) return;
     META_TOKEN = token;
-    await onFBConnected();
+    await showConnectedUI({ name: 'Token Manual', picture: null });
 }
 
 function onFBConnected() {
     FB.api('/me', { fields: 'name,picture.type(small)' }, async user => {
-        const area = document.getElementById('fb-connected-area');
-        const connectArea = document.getElementById('fb-connect-area');
-        const infoEl = document.getElementById('fb-user-info');
-        if (infoEl) {
-            const pic = user.picture?.data?.url ? `<img src="${user.picture.data.url}">` : '';
-            infoEl.innerHTML = `${pic}<span>${user.name}</span>`;
-        }
-        connectArea.style.display = 'none';
-        area.style.display = 'block';
-        lucide.createIcons();
-        await loadBMAccounts();
+        await showConnectedUI(user);
     });
+}
+
+async function showConnectedUI(user) {
+    const area = document.getElementById('fb-connected-area');
+    const connectArea = document.getElementById('fb-connect-area');
+    const infoEl = document.getElementById('fb-user-info');
+    if (infoEl) {
+        const pic = user?.picture?.data?.url ? `<img src="${user.picture.data.url}">` : '';
+        infoEl.innerHTML = `${pic}<span>${user?.name || 'Conectado'}</span>`;
+    }
+    connectArea.style.display = 'none';
+    area.style.display = 'block';
+    lucide.createIcons();
+    await loadBMAccounts();
 }
 
 const FIXED_COSTS_MONTHLY = 333.89;
