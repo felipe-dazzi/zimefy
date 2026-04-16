@@ -372,8 +372,14 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
 /* Config Tab */
 .config-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+    gap: 24px;
+}
+
+.config-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .config-field label {
@@ -382,32 +388,38 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     font-weight: 700;
     color: var(--text-dim);
     text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-bottom: 8px;
+    letter-spacing: 1.2px;
 }
 
 .config-input {
     width: 100%;
     background: rgba(255,255,255,0.04);
     border: 1px solid var(--card-border);
-    border-radius: 10px;
+    border-radius: 12px;
     color: var(--text-main);
-    padding: 12px 14px;
-    font-size: 14px;
+    padding: 14px 16px;
+    font-size: 15px;
     font-family: 'Plus Jakarta Sans', sans-serif;
     font-weight: 600;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color 0.2s, background 0.2s;
+    -moz-appearance: textfield;
 }
 
-.config-input:focus { border-color: var(--accent-primary); }
+.config-input::-webkit-outer-spin-button,
+.config-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+.config-input:focus {
+    border-color: var(--accent-primary);
+    background: rgba(123,44,191,0.06);
+}
 
 .config-total {
     background: rgba(123,44,191,0.08);
-    border: 1px solid rgba(123,44,191,0.2);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 14px;
+    border: 1px solid rgba(123,44,191,0.25);
+    border-radius: 12px;
+    padding: 14px 16px;
+    font-size: 15px;
     font-weight: 700;
     color: var(--accent-secondary);
 }
@@ -416,7 +428,7 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 14px 28px;
+    padding: 14px 30px;
     background: var(--accent-primary);
     border: none;
     border-radius: 12px;
@@ -426,6 +438,7 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     font-weight: 700;
     cursor: pointer;
     transition: background 0.2s, transform 0.15s;
+    letter-spacing: 0.3px;
 }
 .save-config-btn:hover { background: var(--accent-secondary); transform: translateY(-2px); }
 
