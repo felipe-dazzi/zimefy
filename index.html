@@ -11,6 +11,8 @@
     <!-- Charts & DB -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Facebook SDK -->
+    <script async defer crossorigin="anonymous" src="https://connect.facebook.net/pt_BR/sdk.js"></script>
     <link rel="stylesheet" href="style.css">
     <!-- Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -50,19 +52,33 @@
             <a href="#" class="nav-link" data-tab="anuncios"><i data-lucide="megaphone"></i> Anúncios</a>
             <a href="#" class="nav-link" data-tab="config"><i data-lucide="settings"></i> Ajustes</a>
         </nav>
-        <!-- BM / Account Selector -->
-        <div class="bm-selector-section" id="bm-selector-section" style="display:none;">
-            <div class="selector-label"><i data-lucide="building-2" style="width:11px;height:11px;"></i> Business Manager</div>
-            <div class="select-wrapper">
-                <select id="bm-selector" class="meta-select"></select>
-                <i data-lucide="chevron-down" class="select-chevron"></i>
+        <!-- Meta / Facebook Connect -->
+        <div class="bm-selector-section" id="bm-selector-section">
+            <div class="selector-label"><i data-lucide="facebook" style="width:11px;height:11px;"></i> Meta Ads</div>
+
+            <!-- Estado: desconectado -->
+            <div id="fb-connect-area">
+                <button onclick="fbLogin()" class="fb-connect-btn">
+                    <i data-lucide="log-in" style="width:14px;height:14px;"></i> Conectar Facebook
+                </button>
             </div>
-            <div class="selector-label" style="margin-top:14px;"><i data-lucide="credit-card" style="width:11px;height:11px;"></i> Conta de Anúncio</div>
-            <div class="select-wrapper">
-                <select id="account-selector" class="meta-select"></select>
-                <i data-lucide="chevron-down" class="select-chevron"></i>
+
+            <!-- Estado: conectado (oculto até login) -->
+            <div id="fb-connected-area" style="display:none;">
+                <div id="fb-user-info" class="fb-user-info"></div>
+                <div class="selector-label" style="margin-top:14px;"><i data-lucide="building-2" style="width:11px;height:11px;"></i> Business Manager</div>
+                <div class="select-wrapper">
+                    <select id="bm-selector" class="meta-select"></select>
+                    <i data-lucide="chevron-down" class="select-chevron"></i>
+                </div>
+                <div class="selector-label" style="margin-top:14px;"><i data-lucide="credit-card" style="width:11px;height:11px;"></i> Conta de Anúncio</div>
+                <div class="select-wrapper">
+                    <select id="account-selector" class="meta-select"></select>
+                    <i data-lucide="chevron-down" class="select-chevron"></i>
+                </div>
+                <div id="account-status-badge" class="account-status-badge"></div>
+                <button onclick="fbLogout()" class="fb-disconnect-btn">Desconectar</button>
             </div>
-            <div id="account-status-badge" class="account-status-badge"></div>
         </div>
 
         <div style="margin-top:auto; color: var(--text-dim); font-size: 10px; text-align: left; padding-left: 10px; opacity: 0.5;">

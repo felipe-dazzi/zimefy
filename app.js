@@ -3,8 +3,56 @@ const SUPABASE_URL = "https://dclwipihgyevdmohsnsd.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SZ1qn1uzYjfSffyHLnQTig_1JTg8j26";
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const META_TOKEN = "EAASoklxR6y4BRENfdj4y3q2bpHhcHFJceZC8vA0MkSwkO72foqGyweomWmMXldU9f9Ras4ZChA8KCgZCupVr815betZBTZC2MtZBO2yZAoZCdiDlCysU3ZCwcF8QxHq12TXb8cAFGkI0DISCefXbZChFQaspw7HcwxZAO4rTTfBGeezjZAAInOHzbPfq7zrlAF0qovkceKNnBcry3pm5H2EraTC3UU6B457p5KMZBe5wEEaOIZAAzHm3kF0Hhz8b7Yrs7OXhAmDfohy4mOOCwWtlUrmBo40txA0zVOVd5mZBQZDZD";
+const META_FB_APP_ID = "1311246474406702";
 const META_GRAPH = "https://graph.facebook.com/v19.0";
+let META_TOKEN = "";
+
+// ─── Facebook SDK Init ─────────────────────────────────────────────────────────
+window.fbAsyncInit = function () {
+    FB.init({ appId: META_FB_APP_ID, version: 'v19.0', xfbml: false, cookie: true });
+    FB.getLoginStatus(response => {
+        if (response.status === 'connected') {
+            META_TOKEN = response.authResponse.accessToken;
+            onFBConnected();
+        }
+    });
+};
+
+async function fbLogin() {
+    FB.login(response => {
+        if (response.status === 'connected') {
+            META_TOKEN = response.authResponse.accessToken;
+            onFBConnected();
+        }
+    }, { scope: 'ads_read,business_management,ads_management' });
+}
+
+function fbLogout() {
+    FB.logout(() => {
+        META_TOKEN = "";
+        document.getElementById('fb-connected-area').style.display = 'none';
+        document.getElementById('fb-connect-area').style.display = 'block';
+        document.getElementById('bm-selector').innerHTML = '';
+        document.getElementById('account-selector').innerHTML = '';
+    });
+}
+
+async function onFBConnected() {
+    // Fetch user name + photo
+    FB.api('/me', { fields: 'name,picture.type(small)' }, user => {
+        const area = document.getElementById('fb-connected-area');
+        const connectArea = document.getElementById('fb-connect-area');
+        const infoEl = document.getElementById('fb-user-info');
+        if (infoEl) {
+            const pic = user.picture?.data?.url ? `<img src="${user.picture.data.url}">` : '';
+            infoEl.innerHTML = `${pic}<span>${user.name}</span>`;
+        }
+        connectArea.style.display = 'none';
+        area.style.display = 'block';
+        lucide.createIcons();
+    });
+    await loadBMAccounts();
+}
 
 const FIXED_COSTS_MONTHLY = 333.89;
 const FIXED_COSTS_DAILY = FIXED_COSTS_MONTHLY / 30;
@@ -33,7 +81,6 @@ async function handleLogin() {
         setTimeout(() => app.style.opacity = '1', 10);
 
         // Start Syncing Data
-        await loadBMAccounts();
         await syncDashboard();
         setInterval(syncDashboard, 5 * 60 * 1000);
         setInterval(syncMetaInsights, 5 * 60 * 1000);

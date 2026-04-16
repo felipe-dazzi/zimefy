@@ -424,6 +424,59 @@ td:last-child { border-right: 1px solid var(--card-border); border-radius: 0 12p
     pointer-events: none;
 }
 
+.fb-connect-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 11px 14px;
+    background: #1877F2;
+    border: none;
+    border-radius: 10px;
+    color: #fff;
+    font-size: 12px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+}
+.fb-connect-btn:hover { background: #1565d8; transform: translateY(-1px); }
+
+.fb-disconnect-btn {
+    margin-top: 12px;
+    width: 100%;
+    padding: 8px;
+    background: transparent;
+    border: 1px solid var(--card-border);
+    border-radius: 8px;
+    color: var(--text-dim);
+    font-size: 11px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.fb-disconnect-btn:hover { border-color: var(--danger); color: var(--danger); }
+
+.fb-user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(24,119,242,0.08);
+    border: 1px solid rgba(24,119,242,0.2);
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5b9cf6;
+    margin-bottom: 4px;
+}
+.fb-user-info img {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+}
+
 .account-status-badge {
     margin-top: 10px;
     font-size: 10px;
