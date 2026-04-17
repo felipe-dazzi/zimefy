@@ -623,7 +623,7 @@ function renderSalesTable(sales, containerId) {
             <tr>
                 <td>${time}</td>
                 <td style="font-weight:700;">${s.produto || 'N/A'}</td>
-                <td><span style="font-size:11px; color:var(--text-dim);">${s.utm_campaign || 'Direto'}</span></td>
+                <td><span style="font-size:11px; color:var(--text-dim);">${s.utm_campaign || 'Direto'}${s.utm_content && s.utm_content !== 'N/A' ? ' / ' + s.utm_content : ''}</span></td>
                 <td>R$ ${parseFloat(s.valor_bruto).toFixed(2)}</td>
                 <td style="color:var(--accent-green); font-weight:700;">R$ ${parseFloat(s.valor_liquido).toFixed(2)}</td>
                 <td><span class="pill pill-paid">${s.status?.toUpperCase() || 'APROVADO'}</span></td>
